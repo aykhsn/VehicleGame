@@ -38,6 +38,7 @@
             this.load.audio('patrolcar_siren', 'patrolcar_siren.mp3');
             this.load.audio('firetruck_siren', 'firetruck_siren.mp3');
             this.load.audio('ambulance_siren', 'ambulance_siren.mp3');
+            this.load.audio('button_click', 'pecho.mp3');
         }
 
         create() {
@@ -45,6 +46,7 @@
             this.dashLineGraphics = this.add.graphics();
             this.vehicle = this.add.image(0, 0, 'patrolcar').setInteractive();
             this.redButton = this.add.image(this.scale.width / 2, this.scale.height / 2, 'redbutton').setInteractive();
+            this.buttonClickSound = this.sound.add('button_click');
             this.angle = -Math.PI / 2; // パトロールカーを初期位置に設定（上側）
             this.initialSpeed = 0.01;
             this.speed = this.initialSpeed;
@@ -60,7 +62,7 @@
             this.resize();
 
             this.vehicle.on('pointerdown', this.startMovement, this);
-            this.redButton.on('pointerdown', this.switchVehicle, this);
+            this.redButton.on('pointerdown', this.onRedButtonDown, this);
         }
 
         update() {
@@ -82,7 +84,14 @@
                 this.isMoving = true;
                 this.currentSiren.play();
                 this.speed = this.initialSpeed;
-                this.redButton.disableInteractive(); // ボタンを無効化
+                this.tweens.add({
+                    targets: this.redButton,
+                    alpha: 0,
+                    duration: 500,
+                    onComplete: () => {
+                        this.redButton.disableInteractive(); // ボタンを無効化
+                    }
+                });
 
                 this.time.delayedCall(4000, () => {
                     this.tweens.add({
@@ -108,8 +117,26 @@
                 this.time.delayedCall(6000, () => {
                     this.isMoving = false;
                     this.redButton.setInteractive(); // ボタンを再度有効化
+                    this.tweens.add({
+                        targets: this.redButton,
+                        alpha: 1,
+                        duration: 500
+                    });
                 });
             }
+        }
+
+        onRedButtonDown() {
+            this.buttonClickSound.play();
+            this.tweens.add({
+                targets: this.redButton,
+                scale: this.redButton.scale * 0.9,
+                duration: 100,
+                yoyo: true,
+                onComplete: () => {
+                    this.switchVehicle();
+                }
+            });
         }
 
         switchVehicle() {
