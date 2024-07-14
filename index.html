@@ -93,11 +93,11 @@
                     }
                 });
 
-                this.time.delayedCall(4000, () => {
+                this.time.delayedCall(6000, () => { // 6秒間走行
                     this.tweens.add({
                         targets: this.currentSiren,
                         volume: 0,
-                        duration: 2000,
+                        duration: 3000, // 3秒間でサイレンの音量を下げる
                         onComplete: () => {
                             this.currentSiren.stop();
                             this.currentSiren.setVolume(1);
@@ -107,14 +107,14 @@
                     this.tweens.add({
                         targets: this,
                         speed: 0,
-                        duration: 2000,
+                        duration: 3000, // 3秒間で速度を減速
                         onUpdate: (tween, target) => {
                             target.speed = tween.getValue();
                         }
                     });
                 });
 
-                this.time.delayedCall(6000, () => {
+                this.time.delayedCall(9000, () => { // 9秒後に停止
                     this.isMoving = false;
                     this.redButton.setInteractive(); // ボタンを再度有効化
                     this.tweens.add({
@@ -166,7 +166,7 @@
                     this.vehicle.setScale(0);
                     this.tweens.add({
                         targets: this.vehicle,
-                        scale: this.minSize / 800,
+                        scale: this.minSize / 10 / 150,
                         duration: 500,
                         onComplete: () => {
                             this.startMovement(); // 車両が入れ替わった後に走り出す
@@ -187,7 +187,7 @@
 
             this.drawDashedLine(minSize);
 
-            this.vehicle.setScale(minSize / 800);
+            this.vehicle.setScale(minSize / 10 / 150);
             this.vehicle.setPosition(this.scale.width / 2, this.scale.height / 2 - this.roadRadius);
 
             this.redButton.setScale(minSize / 1600);
