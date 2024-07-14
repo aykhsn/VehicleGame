@@ -39,6 +39,7 @@
             this.load.audio('firetruck_siren', 'firetruck_siren.mp3');
             this.load.audio('ambulance_siren', 'ambulance_siren.mp3');
             this.load.audio('button_click', 'pecho.mp3');
+            this.load.audio('speed_up', 'charge.mp3');
         }
 
         create() {
@@ -47,6 +48,7 @@
             this.vehicle = this.add.image(0, 0, 'patrolcar').setInteractive();
             this.redButton = this.add.image(this.scale.width / 2, this.scale.height / 2, 'redbutton').setInteractive();
             this.buttonClickSound = this.sound.add('button_click');
+            this.speedUpSound = this.sound.add('speed_up');
             this.angle = -Math.PI / 2; // パトロールカーを初期位置に設定（上側）
             this.initialSpeed = 0.01;
             this.speed = this.initialSpeed;
@@ -61,7 +63,7 @@
 
             this.resize();
 
-            this.vehicle.on('pointerdown', this.startMovement, this);
+            this.vehicle.on('pointerdown', this.accelerate, this);
             this.redButton.on('pointerdown', this.onRedButtonDown, this);
         }
 
@@ -123,6 +125,18 @@
                         duration: 500
                     });
                 });
+            }
+        }
+
+        accelerate() {
+            if (this.isMoving) {
+                this.speedUpSound.play();
+                this.speed = this.initialSpeed * 4;
+                this.time.delayedCall(1000, () => {
+                    this.speed = this.initialSpeed;
+                });
+            } else {
+                this.startMovement();
             }
         }
 
