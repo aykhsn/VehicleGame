@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パトロールカーゲーム</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #7fcc99;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    class PatrolCarGame extends Phaser.Scene {
+        constructor() {
+            super({ key: 'PatrolCarGame' });
+        }
+
+        preload() {
+            this.load.image('patrolcar', 'patrolcar.png');
+            this.load.audio('siren', 'siren.mp3');
+        }
+
+        create() {
+            this.roadGraphics = this.add.graphics();
+            this.dashLineGraphics = this.add.graphics();
+            this.patrolCar = this.add.image(0, 0, 'patrolcar');
+            this.angle = -Math.PI / 2; // パトロールカーを初期位置に設定（上側）
+            this.speed = 0.01;
+            this.isMoving = false;
+            this.sirenSound = this.sound.add('siren', { loop: true });
+
+            this.resize();
+
+            this.input.on('pointerdown', this.toggleMovement, this);
+        }
+
+        update() {
+            if (this.isMoving) {
+                this.angle -= this.speed;
+                const radius = this.roadRadius;
+                const centerX = this.scale.width / 2;
+                const centerY = this.scale.height / 2;
+
+                this.patrolCar.x = centerX + radius * Math.cos(this.angle);
+                this.patrolCar.y = centerY + radius * Math.sin(this.angle);
+
+                this.patrolCar.rotation = this.angle + Math.PI / 2;
+            }
+        }
+
+        toggleMovement() {
+            this.isMoving = !this.isMoving;
+            if (this.isMoving) {
+                this.sirenSound.play();
+            } else {
+                this.sirenSound.stop();
+            }
+        }
+
+        resize() {
+            const minSize = Math.min(this.scale.width, this.scale.height);
+            this.roadRadius = minSize / 2 - minSize * 0.2;
+
+            this.roadGraphics.clear();
+            this.roadGraphics.lineStyle(24, 0xCCCCCC, 1);
+            this.roadGraphics.strokeCircle(this.scale.width / 2, this.scale.height / 2, this.roadRadius);
+
+            this.drawDashedLine();
+
+            this.patrolCar.setScale(minSize / 800);
+            this.patrolCar.setPosition(this.scale.width / 2, this.scale.height / 2 - this.roadRadius);
+        }
+
+        drawDashedLine() {
+            this.dashLineGraphics.clear();
+            const dashLength = 12;
+            const gapLength = 10;
+            const radius = this.roadRadius;
+            const centerX = this.scale.width / 2;
+            const centerY = this.scale.height / 2;
+            const dashColor = 0xEEEEEE;
+            const lineWidth = 4;
+
+            this.dashLineGraphics.lineStyle(lineWidth, dashColor, 1);
+
+            for (let angle = 0; angle < 2 * Math.PI; angle += (dashLength + gapLength) / radius) {
+                const startX = centerX + radius * Math.cos(angle);
+                const startY = centerY + radius * Math.sin(angle);
+                const endX = centerX + radius * Math.cos(angle + dashLength / radius);
+                const endY = centerY + radius * Math.sin(angle + dashLength / radius);
+
+                this.dashLineGraphics.beginPath();
+                this.dashLineGraphics.moveTo(startX, startY);
+                this.dashLineGraphics.lineTo(endX, endY);
+                this.dashLineGraphics.strokePath();
+            }
+        }
+    }
+
+    const config = {
+        type: Phaser.AUTO,
+        scale: {
+            mode: Phaser.Scale.RESIZE,
+            autoCenter: Phaser.Scale.CENTER_BOTH
+        },
+        backgroundColor: '#7fcc99',
+        scene: PatrolCarGame
+    };
+
+    const game = new Phaser.Game(config);
+
+    window.addEventListener('resize', () => {
+        game.scene.scenes[0].resize();
+    });
+</script>
+
+</body>
+</html>
