@@ -7,7 +7,6 @@
     <title>のりものグルグル｜こどもゲーム</title>
     <link rel="icon" href="patrolcar.png">
     <link rel="apple-touch-icon" href="patrolcar.png">
-    <link rel="apple-touch-icon-precomposed" href="patrolcar.png">
     <meta name="description" content="乗り物を走らせよう！子供向けゲーム">
     <meta name="keywords" content="game, ゲーム, 乗り物ゲーム、知育、子供向けゲーム">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
@@ -26,28 +25,42 @@
 <body>
 
 <script>
-    class PatrolCarGame extends Phaser.Scene {
+    class VehicleGame extends Phaser.Scene {
         constructor() {
-            super({ key: 'PatrolCarGame' });
+            super({ key: 'VehicleGame' });
         }
 
         preload() {
             this.load.image('patrolcar', 'patrolcar.png');
-            this.load.audio('siren', 'siren.mp3');
+            this.load.image('firetruck', 'firetruck.png');
+            this.load.image('ambulance', 'ambulance.png');
+            this.load.image('redbutton', 'button.png');
+            this.load.audio('patrolcar_siren', 'patrolcar_siren.mp3');
+            this.load.audio('firetruck_siren', 'firetruck_siren.mp3');
+            this.load.audio('ambulance_siren', 'ambulance_siren.mp3');
         }
 
         create() {
             this.roadGraphics = this.add.graphics();
             this.dashLineGraphics = this.add.graphics();
-            this.patrolCar = this.add.image(0, 0, 'patrolcar');
+            this.vehicle = this.add.image(0, 0, 'patrolcar').setInteractive();
+            this.redButton = this.add.image(this.scale.width / 2, this.scale.height / 2, 'redbutton').setInteractive();
             this.angle = -Math.PI / 2; // パトロールカーを初期位置に設定（上側）
-            this.speed = 0.01;
+            this.initialSpeed = 0.01;
+            this.speed = this.initialSpeed;
             this.isMoving = false;
-            this.sirenSound = this.sound.add('siren', { loop: true });
+            this.currentVehicle = 'patrolcar';
+            this.sirenSounds = {
+                patrolcar: this.sound.add('patrolcar_siren', { loop: true }),
+                firetruck: this.sound.add('firetruck_siren', { loop: true }),
+                ambulance: this.sound.add('ambulance_siren', { loop: true })
+            };
+            this.currentSiren = this.sirenSounds.patrolcar;
 
             this.resize();
 
-            this.input.on('pointerdown', this.toggleMovement, this);
+            this.vehicle.on('pointerdown', this.startMovement, this);
+            this.redButton.on('pointerdown', this.switchVehicle, this);
         }
 
         update() {
@@ -57,45 +70,112 @@
                 const centerX = this.scale.width / 2;
                 const centerY = this.scale.height / 2;
 
-                this.patrolCar.x = centerX + radius * Math.cos(this.angle);
-                this.patrolCar.y = centerY + radius * Math.sin(this.angle);
+                this.vehicle.x = centerX + radius * Math.cos(this.angle);
+                this.vehicle.y = centerY + radius * Math.sin(this.angle);
 
-                this.patrolCar.rotation = this.angle + Math.PI / 2;
+                this.vehicle.rotation = this.angle + Math.PI / 2;
             }
         }
 
-        toggleMovement() {
-            this.isMoving = !this.isMoving;
-            if (this.isMoving) {
-                this.sirenSound.play();
-            } else {
-                this.sirenSound.stop();
+        startMovement() {
+            if (!this.isMoving) {
+                this.isMoving = true;
+                this.currentSiren.play();
+                this.speed = this.initialSpeed;
+                this.redButton.disableInteractive(); // ボタンを無効化
+
+                this.time.delayedCall(4000, () => {
+                    this.tweens.add({
+                        targets: this.currentSiren,
+                        volume: 0,
+                        duration: 2000,
+                        onComplete: () => {
+                            this.currentSiren.stop();
+                            this.currentSiren.setVolume(1);
+                        }
+                    });
+
+                    this.tweens.add({
+                        targets: this,
+                        speed: 0,
+                        duration: 2000,
+                        onUpdate: (tween, target) => {
+                            target.speed = tween.getValue();
+                        }
+                    });
+                });
+
+                this.time.delayedCall(6000, () => {
+                    this.isMoving = false;
+                    this.redButton.setInteractive(); // ボタンを再度有効化
+                });
             }
+        }
+
+        switchVehicle() {
+            this.tweens.add({
+                targets: this.vehicle,
+                scale: 0,
+                duration: 500,
+                onComplete: () => {
+                    if (this.isMoving) {
+                        this.currentSiren.stop();
+                    }
+
+                    if (this.currentVehicle === 'patrolcar') {
+                        this.currentVehicle = 'firetruck';
+                        this.vehicle.setTexture('firetruck');
+                        this.currentSiren = this.sirenSounds.firetruck;
+                    } else if (this.currentVehicle === 'firetruck') {
+                        this.currentVehicle = 'ambulance';
+                        this.vehicle.setTexture('ambulance');
+                        this.currentSiren = this.sirenSounds.ambulance;
+                    } else if (this.currentVehicle === 'ambulance') {
+                        this.currentVehicle = 'patrolcar';
+                        this.vehicle.setTexture('patrolcar');
+                        this.currentSiren = this.sirenSounds.patrolcar;
+                    }
+
+                    this.vehicle.setScale(0);
+                    this.tweens.add({
+                        targets: this.vehicle,
+                        scale: this.minSize / 800,
+                        duration: 500,
+                        onComplete: () => {
+                            this.startMovement(); // 車両が入れ替わった後に走り出す
+                        }
+                    });
+                }
+            });
         }
 
         resize() {
             const minSize = Math.min(this.scale.width, this.scale.height);
+            this.minSize = minSize;
             this.roadRadius = minSize / 2 - minSize * 0.2;
 
             this.roadGraphics.clear();
-            this.roadGraphics.lineStyle(24, 0xCCCCCC, 1);
+            this.roadGraphics.lineStyle(minSize * 0.1, 0xCCCCCC, 1);
             this.roadGraphics.strokeCircle(this.scale.width / 2, this.scale.height / 2, this.roadRadius);
 
-            this.drawDashedLine();
+            this.drawDashedLine(minSize);
 
-            this.patrolCar.setScale(minSize / 800);
-            this.patrolCar.setPosition(this.scale.width / 2, this.scale.height / 2 - this.roadRadius);
+            this.vehicle.setScale(minSize / 800);
+            this.vehicle.setPosition(this.scale.width / 2, this.scale.height / 2 - this.roadRadius);
+
+            this.redButton.setScale(minSize / 1600);
+            this.redButton.setPosition(this.scale.width / 2, this.scale.height / 2);
         }
 
-        drawDashedLine() {
+        drawDashedLine(minSize) {
             this.dashLineGraphics.clear();
-            const dashLength = 12;
-            const gapLength = 10;
+            const dashLength = minSize * 0.04;
+            const gapLength = minSize * 0.03;
             const radius = this.roadRadius;
             const centerX = this.scale.width / 2;
             const centerY = this.scale.height / 2;
             const dashColor = 0xEEEEEE;
-            const lineWidth = 4;
+            const lineWidth = minSize * 0.01;
 
             this.dashLineGraphics.lineStyle(lineWidth, dashColor, 1);
 
@@ -120,7 +200,7 @@
             autoCenter: Phaser.Scale.CENTER_BOTH
         },
         backgroundColor: '#7fcc99',
-        scene: PatrolCarGame
+        scene: VehicleGame
     };
 
     const game = new Phaser.Game(config);
