@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex" />
     <title>のりものグルグル｜こどもゲーム</title>
-    <link rel="icon" href="patrolcar.png">
-    <link rel="apple-touch-icon" href="patrolcar.png">
+    <link rel="icon" href="assets/patrolcar.png">
+    <link rel="apple-touch-icon" href="assets/patrolcar.png">
     <meta name="description" content="乗り物を走らせよう！子供向けゲーム">
     <meta name="keywords" content="game, ゲーム, 乗り物ゲーム、知育、子供向けゲーム">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
@@ -31,15 +32,15 @@
         }
 
         preload() {
-            this.load.image('patrolcar', 'patrolcar.png');
-            this.load.image('firetruck', 'firetruck.png');
-            this.load.image('ambulance', 'ambulance.png');
-            this.load.image('redbutton', 'button.png');
-            this.load.audio('patrolcar_siren', 'patrolcar_siren.mp3');
-            this.load.audio('firetruck_siren', 'firetruck_siren.mp3');
-            this.load.audio('ambulance_siren', 'ambulance_siren.mp3');
-            this.load.audio('button_click', 'pecho.mp3');
-            this.load.audio('speed_up', 'charge.mp3');
+            this.load.image('patrolcar', 'assets/patrolcar.png');
+            this.load.image('firetruck', 'assets/firetruck.png');
+            this.load.image('ambulance', 'assets/ambulance.png');
+            this.load.image('redbutton', 'assets/button.png');
+            this.load.audio('patrolcar_siren', 'assets/patrolcar_siren.mp3');
+            this.load.audio('firetruck_siren', 'assets/firetruck_siren.mp3');
+            this.load.audio('ambulance_siren', 'assets/ambulance_siren.mp3');
+            this.load.audio('button_click', 'assets/pecho.mp3');
+            this.load.audio('speed_up', 'assets/charge.mp3');
         }
 
         create() {
